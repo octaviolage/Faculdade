@@ -14,7 +14,7 @@ public class App {
     private static final int TAMANHO_BLOCO = 2000;
     private static final int QUANTIDADE_ARQUIVOS = 3;
     private static final String NOME_ARQUIVO_TMP = "temp.tmp";
-    private static int QUANTIDADE_OBJETOS = 614656;
+    private static int QUANTIDADE_OBJETOS = 0;
     
     public static void gravarBloco(Pessoa[] bloco, RandomAccessFile arq) throws IOException{
         Arrays.sort(bloco);             
@@ -27,7 +27,9 @@ public class App {
     }
 
     public static int  gerarBlocosFixos() throws IOException {
+    	
     	QUANTIDADE_OBJETOS = 0;
+    	
     	int contaBlocos = 0;
     	Pessoa blocoPessoas[] = new Pessoa[TAMANHO_BLOCO];
         int posAtual = 0;
@@ -37,6 +39,7 @@ public class App {
         RandomAccessFile[] arqTemp = new RandomAccessFile[QUANTIDADE_ARQUIVOS];
         
         for(int i =0; i <QUANTIDADE_ARQUIVOS; ++i){
+        	
             arqTemp[i] = new RandomAccessFile(new File(i+NOME_ARQUIVO_TMP), "rw");
             arqTemp[i].setLength(0);
         }
@@ -44,10 +47,13 @@ public class App {
         int qtdPessoas = arqDados.readInt();
 
         for(int i=0; i< qtdPessoas; i++){
+        	
         	Pessoa aux = Pessoa.readFromFile(arqDados);
             blocoPessoas[posAtual] = aux;
             posAtual++;
+            
             if(posAtual == TAMANHO_BLOCO){
+            	
             	gravarBloco(blocoPessoas, arqTemp[arqAtual]);
             	contaBlocos++;
             	posAtual=0;
@@ -56,36 +62,18 @@ public class App {
                 arqAtual++; 
                 arqAtual = (arqAtual % QUANTIDADE_ARQUIVOS);
             }
+            
             QUANTIDADE_OBJETOS++;
+            
         }
-
+        
+        gravarBloco(blocoPessoas, arqTemp[arqAtual]);
         arqDados.close();
         for(int i =0; i <QUANTIDADE_ARQUIVOS; ++i){
             arqTemp[i].close();
         }
         
         return contaBlocos;
-    }
-    
-    public static void testeLeituraBlocos(String nomeArq) throws IOException {
-    	Scanner leitor = new Scanner(System.in);
-    	RandomAccessFile temp = new RandomAccessFile(new File(nomeArq), "r");
-    	Pessoa aux = Pessoa.readFromFile(temp);
-    	boolean fimDeArq = false;
-    	try {
-    		while (!fimDeArq) {
-        		if (aux.compareTo(Pessoa.separador()) != 0) {
-        			System.out.println(aux.toString());
-        		}
-        		else
-        			leitor.nextLine();
-        		aux = Pessoa.readFromFile(temp);
-        	}
-    	}
-    	catch (IOException e) {
-    		return;
-    	}
-
     }
     
   //controlar fonte e saida de dados, sempre a entrada é a primeira metade do array
@@ -168,6 +156,7 @@ public class App {
     		//Verifica em qual o passo atual
     		int controlaLeitura = 0;
     		int controlaEscrita = qntdArquivos;
+    		
     		if(passo % 2 != 0) {
     			controlaLeitura = qntdArquivos;
     			controlaEscrita = 0;
@@ -190,12 +179,12 @@ public class App {
         		int origemMenor = 0;
         		
         		//Decidir "menor" dos dados lidos
-            	for (int i = 1; i < pessoas.length; i++) {
+            	for (int i = 0; i < pessoas.length; i++) {
             		
             		if (pessoas[i].compareTo(Pessoa.separador()) != 0) {
-            			quebraLoop = false; //Lido dado nao separador, o loop vai continuar
+            			quebraLoop = false; //Lido um dado nao separador, o loop vai continuar
             			
-            			if (menor.compareTo(pessoas[i]) > 0 | menor.compareTo(Pessoa.separador()) == 0) {
+            			if (menor.compareTo(pessoas[i]) > 0 || menor.compareTo(Pessoa.separador()) == 0) {
             				menor = pessoas[i];
                 			origemMenor = i; //guarda de onde vem o menor
                 		}
@@ -204,31 +193,32 @@ public class App {
             		
             	}
             	
-            	//Escrever esse menor no arquivo de saida atual
+            	//Finaliza o laco se todos os dados sao separadores
+            	if (quebraLoop) 
+            		break;
+            	
+            	//Se não for um separador, escrever esse menor no arquivo de saida atual
             	if (menor.compareTo(Pessoa.separador()) != 0) {
-            		//System.out.println("Arquivo saida atual = " + arqSaidaAtual);
+
             		menor.saveToFile(arqTemp[arqSaidaAtual]);
                 	tamanhoBloco++;
+                	
+                	//Se não for o final do arquivo, ler o proximo dado da fonte do menor arquivo
+                	if (arqTemp[origemMenor + controlaLeitura].getFilePointer() < arqTemp[origemMenor + controlaLeitura].length())
+                        pessoas[origemMenor] = Pessoa.readFromFile(arqTemp[origemMenor + controlaLeitura]);
             	}
             	
-            	//Se não for um separador, ler o proximo dado da fonte do menor arquivo
-            	if (arqTemp[origemMenor + controlaLeitura].getFilePointer() < arqTemp[origemMenor + controlaLeitura].length()) {
-                    pessoas[origemMenor] = Pessoa.readFromFile(arqTemp[origemMenor + controlaLeitura]);
-        		}
-            	
-            	//Finaliza o laco se todos os dados sao separadores
-            	if (quebraLoop) {
-            		break;
-            	}
-        	
         	}
 
-        	//Colocar separador no arquivo de saida atual
-    		Pessoa.separador().saveToFile(arqTemp[arqSaidaAtual]);
-    		
-    		//Mudar arquivo de saida atual
-        	arqSaidaAtual = ((arqSaidaAtual + 1) % qntdArquivos) + controlaEscrita;
-        	System.out.println(tamanhoBloco + " x " + QUANTIDADE_OBJETOS);
+        	if (tamanhoBloco != 0) {
+        		//Colocar separador no arquivo de saida atual
+        		Pessoa.separador().saveToFile(arqTemp[arqSaidaAtual]);
+        		
+        		//Mudar arquivo de saida atual
+            	arqSaidaAtual = ((arqSaidaAtual + 1) % qntdArquivos) + controlaEscrita;
+            	System.out.println(tamanhoBloco + " x " + QUANTIDADE_OBJETOS);
+        	}
+        	
     	}
     	
     }
@@ -239,7 +229,7 @@ public class App {
     	gerarBlocosFixos();
 //    	testeLeituraBlocos("4temp.tmp");
     	System.out.println("Ordenando...");
-//    	ordenaBlocosFixos(QUANTIDADE_ARQUIVOS);
+    	ordenaBlocosFixos(QUANTIDADE_ARQUIVOS);
     }
 
 
