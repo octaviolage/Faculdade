@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Termo implements Comparable<Object>, Serializable {
+public class Termo implements Serializable {
 
 	/**
 	 * 
@@ -47,20 +47,6 @@ public class Termo implements Comparable<Object>, Serializable {
 	public Termo readFromFile(ObjectInputStream file) throws IOException, ClassNotFoundException {
 		Termo aux = (Termo) file.readObject();
 		return aux;
-	}
-	
-	@Override
-	public int compareTo(Object o) {
-		Termo outro = (Termo) o;
-		int resultado = this.palavra.compareToIgnoreCase(outro.palavra);
-		if (resultado > 0) {
-			return 1;
-		}
-		else if (resultado < 0){
-			return -1;
-		}
-		
-		return 0;
 	}
 	
 	public String toString() {

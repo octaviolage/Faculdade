@@ -12,11 +12,9 @@ public class Main {
 		
 		Dicionario dicionario = new Dicionario("TXT/");
 		dicionario.saveToFile("dicionario.dat");
-//		dicionario.imprimir();
 		
 		File arquivo = new File("dicionario.dat");
 		dicionario = new Dicionario(arquivo);
-//		dicionario.imprimir();
 
 		String pesquisa = "";
 		Scanner teclado = new Scanner(System.in);
